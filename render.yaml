@@ -3,7 +3,7 @@ sservices:
     name: telegram-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python bot.py
+    startCommand: python app.py
     envVars:
       - key: BOT_TOKEN
         sync: false

@@ -19,7 +19,7 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format, *args):
-        pass  # Отключаем логирование
+        pass
 
 
 def run_http_server():
@@ -27,20 +27,18 @@ def run_http_server():
     port = int(os.environ.get('PORT', 10000))
     server = HTTPServer(('0.0.0.0', port), HealthHandler)
     print(f'✅ HTTP сервер запущен на порту {port}')
-    print(f'🌐 Health check доступен: http://0.0.0.0:{port}/health')
+    print(f'🌐 Health check: http://0.0.0.0:{port}/health')
     server.serve_forever()
 
 
-# ========== TELEGRAM БОТ - ВАШ ПОЛНЫЙ КОД ==========
+# ========== TELEGRAM БОТ - ОБНОВЛЕННЫЙ КОД ДЛЯ aiogram 3.7.0+ ==========
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import (
-    Message, ReplyKeyboardMarkup, KeyboardButton,
-    InlineKeyboardMarkup, InlineKeyboardButton
-)
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.client.default import DefaultBotProperties  # ✅ НОВОЕ В aiogram 3.7.0+
 
 # Настройка логирования
 logging.basicConfig(
@@ -53,11 +51,14 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 if not BOT_TOKEN:
     logger.error('❌ BOT_TOKEN не найден!')
-    logger.error('Добавьте переменную BOT_TOKEN в настройках Render/Railway')
+    logger.error('Добавьте переменную BOT_TOKEN в настройках Render')
     sys.exit(1)
 
-# Инициализация бота и диспетчера
-bot = Bot(token=BOT_TOKEN, parse_mode='HTML')
+# Инициализация бота с новым синтаксисом для aiogram 3.7.0+
+bot = Bot(
+    token=BOT_TOKEN,
+    default=DefaultBotProperties(parse_mode='HTML')  # ✅ ИСПРАВЛЕННО
+)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
@@ -112,7 +113,7 @@ def get_budget_keyboard():
 
 # ========== ВАШИ ОБРАБОТЧИКИ КОМАНД ==========
 @dp.message(Command('start'))
-async def cmd_start(message: Message):
+async def cmd_start(message: types.Message):
     await message.answer(
         '👋 <b>Добро пожаловать!</b>\n\n'
         'Я помогу вам создать цифровой продукт. '
@@ -122,7 +123,7 @@ async def cmd_start(message: Message):
 
 
 @dp.message(Command('help'))
-async def cmd_help(message: Message):
+async def cmd_help(message: types.Message):
     await message.answer(
         '📋 <b>Доступные команды:</b>\n\n'
         '/start - Начать диалог\n'
@@ -135,10 +136,10 @@ async def cmd_help(message: Message):
 
 @dp.message(Command('cancel'))
 @dp.message(F.text == '🔙 Назад')
-async def cmd_cancel(message: Message, state: FSMContext):
+async def cmd_cancel(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer('❌ Нет активной заявки для отмены.')
+        await message.answer('❌ Нет активной заявки для отмена.')
         return
 
     await state.clear()
@@ -151,7 +152,7 @@ async def cmd_cancel(message: Message, state: FSMContext):
 
 # ========== ВАШИ ОБРАБОТЧИКИ КНОПОК ==========
 @dp.message(F.text == '📝 Оставить заявку')
-async def start_application(message: Message, state: FSMContext):
+async def start_application(message: types.Message, state: FSMContext):
     await state.set_state(ApplicationForm.waiting_for_name)
     await message.answer(
         '📝 <b>Начнем оформление заявки!</b>\n\n'
@@ -165,7 +166,7 @@ async def start_application(message: Message, state: FSMContext):
 
 
 @dp.message(F.text == 'ℹ️ О нас')
-async def about_us(message: Message):
+async def about_us(message: types.Message):
     await message.answer(
         '🏢 <b>О нашей компании:</b>\n\n'
         'Мы - команда разработчиков, создающая качественные цифровые продукты. '
@@ -179,7 +180,7 @@ async def about_us(message: Message):
 
 
 @dp.message(F.text == '💼 Услуги')
-async def services(message: Message):
+async def services(message: types.Message):
     await message.answer(
         '🛠 <b>Наши услуги:</b>\n\n'
         'Выберите интересующую услугу:',
@@ -188,7 +189,7 @@ async def services(message: Message):
 
 
 @dp.message(F.text == '📞 Контакты')
-async def contacts(message: Message):
+async def contacts(message: types.Message):
     await message.answer(
         '📱 <b>Наши контакты:</b>\n\n'
         'Telegram: @ваш_логин\n'
@@ -202,7 +203,7 @@ async def contacts(message: Message):
 # ========== ВАШИ ОБРАБОТЧИКИ FSM ==========
 # Шаг 1: Имя
 @dp.message(ApplicationForm.waiting_for_name, F.text != '🔙 Назад')
-async def process_name(message: Message, state: FSMContext):
+async def process_name(message: types.Message, state: FSMContext):
     if len(message.text) < 2:
         await message.answer('❌ Имя должно содержать минимум 2 символа. Попробуйте еще:')
         return
@@ -218,7 +219,7 @@ async def process_name(message: Message, state: FSMContext):
 
 # Шаг 2: Телефон
 @dp.message(ApplicationForm.waiting_for_phone)
-async def process_phone(message: Message, state: FSMContext):
+async def process_phone(message: types.Message, state: FSMContext):
     if message.text == '🔙 Назад':
         await state.set_state(ApplicationForm.waiting_for_name)
         await message.answer('Введите ваше имя:')
@@ -241,7 +242,7 @@ async def process_phone(message: Message, state: FSMContext):
 
 # Шаг 3: Услуга
 @dp.message(ApplicationForm.waiting_for_service)
-async def process_service(message: Message, state: FSMContext):
+async def process_service(message: types.Message, state: FSMContext):
     if message.text == '🔙 Назад':
         await state.set_state(ApplicationForm.waiting_for_phone)
         await message.answer('Введите ваш номер телефона:')
@@ -258,7 +259,7 @@ async def process_service(message: Message, state: FSMContext):
 
 # Шаг 4: Бизнес
 @dp.message(ApplicationForm.waiting_for_business)
-async def process_business(message: Message, state: FSMContext):
+async def process_business(message: types.Message, state: FSMContext):
     if message.text == '🔙 Назад':
         await state.set_state(ApplicationForm.waiting_for_service)
         await message.answer('Выберите услугу:', reply_markup=get_services_keyboard())
@@ -280,7 +281,7 @@ async def process_business(message: Message, state: FSMContext):
 
 # Шаг 5: Бюджет
 @dp.message(ApplicationForm.waiting_for_budget)
-async def process_budget(message: Message, state: FSMContext):
+async def process_budget(message: types.Message, state: FSMContext):
     if message.text == '🔙 Назад':
         await state.set_state(ApplicationForm.waiting_for_business)
         await message.answer('Опишите ваш бизнес или проект:')
@@ -298,7 +299,7 @@ async def process_budget(message: Message, state: FSMContext):
 
 # Шаг 6: Контакт и финализация
 @dp.message(ApplicationForm.waiting_for_contact)
-async def process_contact(message: Message, state: FSMContext):
+async def process_contact(message: types.Message, state: FSMContext):
     if message.text == '🔙 Назад':
         await state.set_state(ApplicationForm.waiting_for_budget)
         await message.answer('Выберите бюджет:', reply_markup=get_budget_keyboard())
@@ -342,7 +343,7 @@ async def start_bot():
 def main():
     """Главная функция"""
     print('=' * 50)
-    print('🚀 ЗАПУСК TELEGRAM БОТА С FSM')
+    print('🚀 ЗАПУСК TELEGRAM БОТА НА RENDER')
     print('=' * 50)
 
     # Запускаем HTTP сервер для health check в отдельном потоке
