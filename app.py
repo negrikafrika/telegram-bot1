@@ -34,7 +34,7 @@ def run_http_server():
     server.serve_forever()
 
 
-# ========== TELEGRAM БОТ - ВАШ КОД С ИСПРАВЛЕНИЯМИ ==========
+# ========== TELEGRAM БОТ ==========
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import State, StatesGroup
@@ -59,12 +59,13 @@ dp = Dispatcher(storage=storage)
 
 # ========== КОНФИГУРАЦИЯ ==========
 class Config:
-    BOT_TOKEN = 8303123723:AAGdE_BUWoVZ4RzL3lSilbrbKI_BkksE4SUBOT_TOKEN
-    ADMIN_IDS = [7403262423]  # Замените на ваш Telegram ID
-    MANAGER_USERNAME = "@guussik"  # Замените на реальный username менеджера
+    # НЕ ВСТАВЛЯЙТЕ ТОКЕН СЮДА! Используйте переменные окружения в Render
+    BOT_TOKEN = BOT_TOKEN  # Используем переменную, полученную из os.environ
+    ADMIN_IDS = [123456789]  # Замените на ваш Telegram ID
+    MANAGER_USERNAME = "@ваш_менеджер"  # Замените на реальный username менеджера
 
 
-# ========== СООБЩЕНИЯ (ВАШИ ОРИГИНАЛЬНЫЕ ТЕКСТЫ) ==========
+# ========== СООБЩЕНИЯ ==========
 class Messages:
     WELCOME_MESSAGE = """<b>🚀 Добро пожаловать в сервис продвижения малого бизнеса!</b>
 
