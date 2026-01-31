@@ -1,15 +1,10 @@
-services:
+sservices:
   - type: web
     name: telegram-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: python bot.py
     envVars:
       - key: BOT_TOKEN
         sync: false
-      - key: ADMIN_IDS
-        sync: false
-      - key: MANAGER_USERNAME
-        value: "@manager"
     healthCheckPath: /health
-    autoDeploy: true
